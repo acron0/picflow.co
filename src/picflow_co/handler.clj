@@ -6,9 +6,11 @@
             [monger.collection :as mc]
             [monger.db :as mdb]
             [monger.query :as mq]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [ring.middleware.cors :refer [wrap-cors]])
   (:use [liberator.core :only [defresource]]
-        [ring.middleware.params :only [wrap-params]]))
+        [ring.middleware.params :only [wrap-params]]
+        [ring.middleware.jsonp :only [wrap-json-with-padding]]))
 
 ;; connection
 (def mg-conn (mg/connect))
@@ -52,4 +54,9 @@
 
 ;; app
 (def app
-  (wrap-params (wrap-defaults app-routes site-defaults)))
+  (wrap-cors
+    (wrap-params
+     (wrap-json-with-padding
+      (wrap-defaults app-routes site-defaults)))
+    :access-control-allow-origin [#".*"]
+    :access-control-allow-methods [:get]))
